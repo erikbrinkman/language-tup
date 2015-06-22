@@ -1,0 +1,127 @@
+## Refactor example
+: foreach *.c |> gcc -c %f -o %o -Wall |> %B.o
+
+CFLAGS = -Wall
+: foreach *.c |> gcc -c %f -o %o $(CFLAGS) |> %B.o
+
+CFLAGS := -Wall
+: foreach *.c |> gcc -c %f -o %o $(CFLAGS) |> %B.o
+
+## Varsed
+: foo.txt |> tup varsed %f %o |> foo-out.txt
+
+## For ach
+# Tupfile 1
+: foo.c |> gcc -c foo.c -o foo.o |> foo.o
+: bar.c |> gcc -c bar.c -o bar.o |> bar.o
+
+# Tupfile 2
+: foreach foo.c bar.c |> gcc -c %f -o %o |> %B.o
+
+## Order only inputs
+: |> echo "#define FOO 3" > %o |> foo.h
+: foreach foo.c bar.c | foo.h |> gcc -c %f -o %o |> %B.o
+
+## Command string
+: foo.c |> ^ CC %f^ gcc -c %f -o %o |> foo.o
+
+## Groups
+#./submodules/sm1/Tupfile
+: foo.c |> gcc -c %f -o %o |> %B.o ../<submodgroup>
+
+#./submodules/sm2/Tupfile
+: bar.c |> gcc -c %f -o %o |> %B.o ../<submodgroup>
+
+#./project/Tupfile
+: baz.c | ../submodules/<submodgroup> |> gcc -c %f -o %o |> %B.o
+
+## Bin
+: foreach *.c |> gcc -c %f -o %o |> %B.o {objs}
+: {objs} |> gcc %f -o %o |> program
+
+## ^ Flags
+: foo.c |> ^c CC %f^ gcc --coverage %f -o %o |> foo | foo.gcno
+: bar.c |> ^c^ gcc --coverage %f -o %o |> bar | bar.gcno
+
+## % Flags
+!ldmap = |> ld ... -o %o |> | %O.map
+: foo1.o foo2.o |> !ldmap |> foo.so
+
+!ar = |> ar crs %o %f |> lib%d.a
+
+: foreach *_text.txt |> foo %f |> %g_binary.bin
+
+## Append
+CFLAGS += `pkg-config fuse --cflags`
+
+## Tup CWD
+: |> echo $(TUP_CWD) |>
+
+## &var
+&var = file
+&var := file
+&var += file
+
+: |> echo &(var) |>
+
+## Conditionals
+ifeq (lval,rval)
+  : |> echo woo |>
+else
+
+endif
+
+ifneq (lval,rval)
+  : |> echo woo |>
+endif
+
+ifdef VARIABLE
+
+ifndef VARIABLE
+
+## Error
+error message
+
+## Include
+include file
+
+## Include Rules
+include_rules
+
+## !macro
+!cc = |> ^ CC %f^ gcc -c %f -o %o |>
+
+include_rules
+: foreach *.c |> !cc |> %B.o
+
+## Run
+run ./build.sh
+
+## Preload
+preload src
+run ./build.sh *.c src/*.c
+
+## Export
+: |> command1 ... |>
+export FOO
+: |> command2 ... |>
+
+## Gitignore
+.gitignore
+
+## @ Variables
+srcs-@(FOO) += foo.c
+srcs-y += bar.c
+: foreach $(srcs-y) |> gcc -c %f -o %o |> %B.o
+
+X = @(TUP_PLATFORM)
+X += @(TUP_ARCH)
+
+## Example
+WARNINGS += -W
+WARNINGS += -Wall
+CFLAGS = $(WARNINGS) -O2
+CFLAGS_foo.c = -DFOO
+: |> echo '#define BAR 3' > %o |> foo.h
+: foreach *.c | foo.h |> gcc -c %f -o %o $(CFLAGS) $(CFLAGS_%f) |> %B.o
+: *.o |> gcc %f -o %o |> program

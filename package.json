@@ -1,0 +1,13 @@
+{
+  "name": "language-tup",
+  "version": "0.1.0",
+  "description": "Tup language support in atom",
+  "keywords": [
+    "tup"
+  ],
+  "repository": "https://github.com/erikbrinkman/language-tup",
+  "license": "MIT",
+  "engines": {
+    "atom": ">=0.174.0 <2.0.0"
+  }
+}

@@ -1,0 +1,300 @@
+'scopeName': 'source.tup'
+'name': 'Tup'
+'fileTypes': [
+  'tup',
+  'Tupfile'
+]
+'patterns': [
+  {
+    # Comments
+    'match': '^\\s*#.*$'
+    'name': 'comment.line.number-sign.tup'
+  }
+  {
+    # Invalid percent escapes
+    'match': '%[^fbBeoOdg%]'
+    'name': 'invalid.illegal.tup'
+  }
+  {
+    # If
+    'match': '^\\s*(ifn?eq)\\s+(\\()(.*)(,)(.*)(\\))\\s*$'
+    'captures':
+      '1': 'name': 'keyword.control.tup'
+      '2': 'name': 'keyword.control.tup'
+      '3':
+        'patterns': [
+          {
+            'include': '#expression'
+          }
+        ]
+      '4': 'name': 'keyword.control.tup'
+      '5':
+        'patterns': [
+          {
+            'include': '#expression'
+          }
+        ]
+      '6': 'name': 'keyword.control.tup'
+  }
+  {
+    # Else and endif
+    'match': '^\\s*(else|endif)\\s*$'
+    'name': 'keyword.control.tup'
+  }
+  {
+    # Include and preload
+    'match': '^\\s*(include|preload)\\s+\\S+\\s*$'
+    'captures':
+      '1': 'name': 'keyword.control.tup'
+  }
+  {
+    # Run
+    'match': '^\\s*(run)\\s+(.*)$'
+    'captures':
+      '1': 'name': 'keyword.control.tup'
+      '2':
+        'patterns': [
+          {
+            'match': '\\*'
+            'name': 'string.regexp.tup'
+          }
+        ]
+  }
+  {
+    # Error
+    'match': '^\\s*(error)\\s+(.*)$'
+    'captures':
+      '1': 'name': 'keyword.control.tup'
+      '2': 'name': 'string.unquoted.tup'
+  }
+  {
+    # Varialbe references
+    'match': '^\\s*(ifn?def|export)\\s+([^!=:+\\s]+)\\s*$'
+    'captures':
+      '1': 'name': 'keyword.control.tup'
+      '2': 'name': 'entity.name.type.tup'
+  }
+  {
+    # Tup standaline keywords
+    'match': '^\\s*(include_rules|\\.gitignore)\\s*$'
+    'name': 'constant.language.tup'
+  }
+  {
+    # Variable assignment
+    'match': '^\\s*(&?[^!=:+\\s]+)\\s*([:+]?=)\\s*(.*)$'
+    'captures':
+      '1': 'name': 'entity.name.type.tup'
+      '2': 'name': 'keyword.control.tup'
+      '3': 'patterns': [
+        {
+          'include': '#expression'
+        }
+      ]
+  }
+  {
+    # !macro definition
+    'match': '^\\s*(!\\w+)\\s*(=)\\s*(.*)$'
+    'captures':
+      # Macro name
+      '1': 'name': 'entity.name.function.tup'
+      # Equals
+      '2': 'name': 'keyword.control.tup'
+      # Base tup expression
+      '3':
+        'patterns': [
+          {
+            'include': '#base-tup'
+          }
+        ]
+  }
+  {
+    # Standard colon rule
+    'match':
+      '^\\s*(:)(\\s*foreach)?([^|]*)(\\|.*?)(\\s*[^>\\s]*<\\w+>)?(\\s*\\{\\w+\\})?\\s*$'
+    'captures':
+      # Colon
+      '1': 'name': 'keyword.control.tup'
+      # Foreach
+      '2': 'name': 'keyword.control.tup'
+      # Inputs
+      '3':
+        'patterns': [
+          {
+            # Bin
+            'match': '\\{\\w+\\}'
+            'name': 'entity.name.type.tup'
+          }
+          {
+            # Glob
+            'match': '\\*'
+            'name': 'string.regexp.tup'
+          }
+          {
+            'include': '#variable-ref'
+          }
+        ]
+      # Base part of a tup expression
+      '4':
+        'patterns': [
+          {
+            'include': '#base-tup'
+          }
+        ]
+      # Group
+      '5': 'name': 'entity.name.type.tup'
+      # Bin
+      '6': 'name': 'entity.name.type.tup'
+  }
+]
+'repository':
+  'base-tup':
+    'patterns': [
+      {
+        'match': '^((\\|)([^|]+))?(\\|>)(.*)(\\|>)([^|]*)((\\|)([^|]*))?$'
+        'captures':
+          # Pipe between inputs and order only inputs
+          '2': 'name': 'keyword.control.tup'
+          # Order only inputs
+          '3':
+            'patterns': [
+              {
+                'match': '[^|\\s]*<\\w+>'
+                'name': 'entity.name.type'
+              }
+              {
+                'match': '\\*'
+                'name': 'string.regexp.tup'
+              }
+              {
+                'include': '#variable-ref'
+              }
+            ]
+          # The |> between inputs and command
+          '4': 'name': 'keyword.control.tup'
+          # The full command
+          '5':
+            'patterns': [
+              {
+                'include': '#command'
+              }
+            ]
+          # |> between command and output
+          '6': 'name': 'keyword.control.tup'
+          # Outputs
+          '7':
+            'patterns': [
+              {
+                # XXX This will highlight %o in the output section
+                'include': '#output'
+              }
+            ]
+          # Pipe between outputs and extra outputs
+          '9': 'name': 'keyword.control.tup'
+          # Extra outputs
+          '10':
+            'patterns': [
+              {
+                'include': '#output'
+              }
+            ]
+      }
+    ]
+  'command':
+    'patterns': [
+      {
+        # Superset of expression rules
+        'include': '#expression'
+      }
+      {
+        'match': '^\\s*\\^([co])?(\\s+[^^]*)?\\^'
+        'name': 'string.unquoted.tup'
+        'captures':
+          '1': 'name': 'constant.language.tup'
+          '2':
+            'patterns': [
+              {
+                'include': '#expression'
+              }
+            ]
+      }
+      {
+        # Also allows bang macros
+        'match': '!\\w+\\b'
+        'name': 'entity.name.function.tup'
+      }
+    ]
+  'expression':
+    'patterns': [
+      {
+        # Superset of output rules
+        'include': '#output'
+      }
+      {
+        # Backtick expressions
+        'match': '(`)([^`]*)(`)'
+        'name': 'string.interpolated.tup'
+      }
+      {
+        # Double quoted strings
+        'match': '(")(.*?)((?<!\\\\)")'
+        'name': 'string.quoted.double'
+        'captures':
+          '2':
+            'patterns': [
+              {
+                'match': '\\\\"'
+                'name': 'constant.character.escape.tup'
+              }
+            ]
+      }
+      {
+        # Single quoted strings
+        'match': "(')(.*?)((?<!\\\\)')"
+        'name': 'string.quoted.single'
+        'captures':
+          '2':
+            'patterns': [
+              {
+                'match': "\\\\'"
+                'name': 'constant.character.escape.tup'
+              }
+            ]
+      }
+    ]
+  'output':
+    'patterns': [
+      {
+        'include': '#variable-ref'
+      }
+      {
+        'include': '#percents'
+      }
+    ]
+  'percents':
+    'patterns': [
+      {
+        # Percent escape patterns
+        'match': '%[fbBeoOdg%]'
+        'name': 'constant.language.tup'
+      }
+    ]
+  'variable-ref':
+    'patterns': [
+      {
+        # The three constant tup variables
+        'match': '@\\(TUP_PLATFORM\\)|@\\(TUP_ARCH\\)|\\$\\(TUP_CWD\\)'
+        'name': 'variable.language.tup'
+      }
+      {
+        # References to $ or & variables in an expression
+        'match': '[$&@]\\(([\\w%-]+)\\)'
+        'name': 'entity.name.type.tup'
+        'captures':
+          '1':
+            'patterns': [
+              {
+                'include': '#percents'
+              }
+            ]
+      }
+    ]
