@@ -2,6 +2,7 @@
 'name': 'Tup'
 'fileTypes': [
   'tup',
+  'tup.config'
   'Tupfile'
 ]
 'patterns': [

@@ -1,6 +1,6 @@
 {
   "name": "language-tup",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Tup language support in atom",
   "keywords": [
     "tup"
