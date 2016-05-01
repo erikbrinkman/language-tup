@@ -11,11 +11,6 @@
     'name': 'comment.line.number-sign.tup'
   }
   {
-    # Invalid percent escapes
-    'match': '%[^fbBeoOdg%]'
-    'name': 'invalid.illegal.tup'
-  }
-  {
     # If
     'match': '^\\s*(ifn?eq)\\s+(\\()(.*)(,)(.*)(\\))\\s*$'
     'captures':
@@ -276,6 +271,15 @@
         # Percent escape patterns
         'match': '%[fbBeoOdg%]'
         'name': 'constant.language.tup'
+      }
+      {
+        'match': '%<\\w+>'
+        'name': 'constant.language.tup'
+      }
+      {
+        # Invalid percent escapes
+        'match': '%.'
+        'name': 'invalid.illegal.tup'
       }
     ]
   'variable-ref':
