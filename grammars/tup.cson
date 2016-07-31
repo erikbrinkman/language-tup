@@ -1,7 +1,7 @@
 'scopeName': 'source.tup'
 'name': 'Tup'
 'fileTypes': [
-  'tup',
+  'tup'
   'tup.config'
   'Tupfile'
 ]
@@ -44,6 +44,20 @@
       '1': 'name': 'keyword.control.tup'
   }
   {
+    # Multiline Run
+    'begin': '^\\s*(run)\\s+(?=.*\\\\$)'
+    'end': '(?<![\\n\\\\])$'
+    'beginCaptures':
+      # Run
+      '1': 'name': 'keyword.control.tup'
+    'patterns': [
+      {
+        'match': '\\*'
+        'name': 'string.regexp.tup'
+      }
+    ]
+  }
+  {
     # Run
     'match': '^\\s*(run)\\s+(.*)$'
     'captures':
@@ -71,7 +85,7 @@
       '2': 'name': 'entity.name.type.tup'
   }
   {
-    # Tup standaline keywords
+    # Tup standalone keywords
     'match': '^\\s*(include_rules|\\.gitignore)\\s*$'
     'name': 'constant.language.tup'
   }
@@ -87,9 +101,46 @@
         }
       ]
   }
+  # FIXME Multiline macro definitions will accept and parse bins. This can't be fixed easily, as the current multiline technique useses cascading rules, so changing the tail parse requires duplicating the cascade, at least partially.
+  {
+    # multiline !macro definition with order only
+    'begin': '^\\s*(!\\w+)\\s*(=)\\s*(\\|)(?!>)(?=.*\\\\$)'
+    'end': '(?<![\\n\\\\])$'
+    'beginCaptures':
+      # Macro name
+      '1': 'name': 'entity.name.function.tup'
+      # Equals
+      '2': 'name': 'keyword.control.tup'
+      # Pipe
+      '3': 'name': 'keyword.control.tup'
+    'patterns': [
+      {
+        # Inputs
+        'include': '#ml-inputs'
+      }
+    ]
+  }
+  {
+    # multiline !macro definition with order only
+    'begin': '^\\s*(!\\w+)\\s*(=)\\s*(\\|>)(?=.*\\\\$)'
+    'end': '(?<![\\n\\\\])$'
+    'beginCaptures':
+      # Macro name
+      '1': 'name': 'entity.name.function.tup'
+      # Equals
+      '2': 'name': 'keyword.control.tup'
+      # Pipe
+      '3': 'name': 'keyword.control.tup'
+    'patterns': [
+      {
+        # Inputs
+        'include': '#ml-carat-flags'
+      }
+    ]
+  }
   {
     # !macro definition
-    'match': '^\\s*(!\\w+)\\s*(=)\\s*(.*)$'
+    'match': '^\\s*(!\\w+)\\s*(=)\\s*(.*?)(<\\w+>\\s*)?$'
     'captures':
       # Macro name
       '1': 'name': 'entity.name.function.tup'
@@ -102,6 +153,24 @@
             'include': '#base-tup'
           }
         ]
+      # Group
+      '4': 'name': 'entity.name.type.tup'
+  }
+  {
+    # Multiline colon rule
+    'begin': '^\\s*(:)(\\s*foreach)?(?=.*\\\\$)'
+    'end': '(?<![\\n\\\\])$'
+    'beginCaptures':
+      # Colon
+      '1': 'name': 'keyword.control.tup'
+      # Foreach
+      '2': 'name': 'keyword.control.tup'
+    'patterns': [
+      {
+        # Inputs
+        'include': '#ml-order-only'
+      }
+    ]
   }
   {
     # Standard colon rule
@@ -116,17 +185,7 @@
       '3':
         'patterns': [
           {
-            # Bin
-            'match': '\\{\\w+\\}'
-            'name': 'entity.name.type.tup'
-          }
-          {
-            # Glob
-            'match': '\\*'
-            'name': 'string.regexp.tup'
-          }
-          {
-            'include': '#variable-ref'
+            'include': '#inputs'
           }
         ]
       # Base part of a tup expression
@@ -143,7 +202,189 @@
   }
 ]
 'repository':
-  'base-tup':
+  'ml-order-only':
+    'patterns': [
+      {
+        # Rest of pattern
+        'begin': '(\\|(?!>))'
+        'end': '(?<![\\n\\\\])$'
+        'beginCaptures': '1': 'name': 'keyword.control.tup'
+        'patterns': [
+          {
+            # Rest
+            'include': '#ml-inputs'
+          }
+        ]
+      }
+      {
+        'include': '#ml-inputs'
+      }
+      {
+        # Input parser
+        'include': '#inputs'
+      }
+    ]
+  'ml-inputs':
+    'patterns': [
+      {
+        # Rest of pattern
+        'begin': '(\\|>)'
+        'end': '(?<![\\n\\\\])$'
+        'beginCaptures': '1': 'name': 'keyword.control.tup'
+        'patterns': [
+          {
+            'include': '#ml-carat-flags'
+          }
+        ]
+      }
+      {
+        # Input parser
+        'include': '#inputs'
+      }
+      {
+        'match': '\\|'
+        'name': 'invalid.illegal.tup'
+      }
+    ]
+  'ml-carat-flags':
+    'patterns': [
+      {
+        'begin': '(\\^([cob]{0,3})(\\s+[^^]*)?\\^)'
+        'end': '(?<![\\n\\\\])$'
+        'beginCaptures':
+          '1': 'name': 'string.unquoted.tup'
+          '2': 'name': 'constant.language.tup'
+          '3':
+            'patterns': [
+              {
+                'include': '#expression'
+              }
+            ]
+        'patterns': [
+          {
+            'include': '#ml-outputs'
+          }
+        ]
+      }
+      {
+        'include': '#ml-outputs'
+      }
+    ]
+  'ml-outputs':
+    'patterns': [
+      {
+        # Rest of pattern
+        'begin': '(\\|>)'
+        'end': '(?<![\\n\\\\])$'
+        'beginCaptures': '1': 'name': 'keyword.control.tup'
+        'patterns': [
+          {
+            'include': '#output'
+          }
+          {
+            'include': '#ml-order-only-outputs'
+          }
+          {
+            'include': '#ml-group'
+          }
+          {
+            'include': '#ml-bin'
+          }
+        ]
+      }
+      {
+        # Superset of expression rules
+        'include': '#expression'
+      }
+      {
+        # Also allows bang macros
+        'match': '!\\w+\\b'
+        'name': 'entity.name.function.tup'
+      }
+    ]
+  'ml-order-only-outputs':
+    'patterns': [
+      {
+        'begin': '(\\|(?!>))'
+        'end': '(?<![\\n\\\\])$'
+        'beginCaptures': '1': 'name': 'keyword.control.tup'
+        'patterns': [
+          {
+            'include': '#output'
+          }
+          {
+            'include': '#ml-group'
+          }
+          {
+            'include': '#ml-bin'
+          }
+          {
+            'match': '\\|'
+            'name': 'invalid.illegal.tup'
+          }
+        ]
+      }
+    ]
+  'ml-group':
+    'patterns': [
+      'begin': '(<\\w+>)'
+      'end': '(?<![\\n\\\\])$'
+      'beginCaptures': '1': 'name': 'entity.name.type.tup'
+      'patterns': [
+        {
+          'include': '#ml-bin'
+        }
+        {
+          # This is okay
+          'match': '\\\\$'
+        }
+        {
+          # Everything else is an error
+          'match': '\\S+'
+          'name': 'invalid.illegal.tup'
+        }
+      ]
+    ]
+  'ml-bin':
+    'patterns': [
+      'begin': '(\\{\\w+\\})'
+      'end': '(?<![\\n\\\\])$'
+      'beginCaptures': '1': 'name': 'entity.name.type.tup'
+      'patterns': [
+        {
+          # This is okay
+          'match': '\\\\$'
+        }
+        {
+          # Everything else is an error
+          'match': '\\S+'
+          'name': 'invalid.illegal.tup'
+        }
+      ]
+    ]
+  'inputs': # Inputs
+    'patterns': [
+      {
+        # Bin
+        'match': '\\{\\w+\\}'
+        'name': 'entity.name.type.tup'
+      }
+      {
+        # Groups
+        'match': '[^|\\s]*<\\w+>'
+        'name': 'entity.name.type'
+      }
+      {
+        # Glob
+        'match': '\\*'
+        'name': 'string.regexp.tup'
+      }
+      {
+        # Variables
+        'include': '#variable-ref'
+      }
+    ]
+  'base-tup': # Base expression
     'patterns': [
       {
         'match': '^((\\|)([^|]+))?(\\|>)(.*)(\\|>)([^|]*)((\\|)([^|]*))?$'
@@ -154,15 +395,7 @@
           '3':
             'patterns': [
               {
-                'match': '[^|\\s]*<\\w+>'
-                'name': 'entity.name.type'
-              }
-              {
-                'match': '\\*'
-                'name': 'string.regexp.tup'
-              }
-              {
-                'include': '#variable-ref'
+                'include': '#inputs'
               }
             ]
           # The |> between inputs and command
@@ -180,7 +413,7 @@
           '7':
             'patterns': [
               {
-                # XXX This will highlight %o in the output section
+                # FIXME This will highlight %o in the output section
                 'include': '#output'
               }
             ]
@@ -202,7 +435,8 @@
         'include': '#expression'
       }
       {
-        'match': '^\\s*\\^([co])?(\\s+[^^]*)?\\^'
+        # FIXME ^bbb^ Will also be highlighted
+        'match': '^\\s*\\^([cob]{0,3})(\\s+[^^]*)?\\^'
         'name': 'string.unquoted.tup'
         'captures':
           '1': 'name': 'constant.language.tup'
@@ -224,6 +458,11 @@
       {
         # Superset of output rules
         'include': '#output'
+      }
+      {
+        # shell  expressions
+        'match': '(\\\\\\\\\\$\\()([^\\)]*)(\\))'
+        'name': 'string.interpolated.tup'
       }
       {
         # Backtick expressions

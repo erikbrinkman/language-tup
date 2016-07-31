@@ -131,3 +131,12 @@ CFLAGS_foo.c = -DFOO
 : |> echo '#define BAR 3' > %o |> foo.h
 : foreach *.c | foo.h |> gcc -c %f -o %o $(CFLAGS) $(CFLAGS_%f) |> %B.o
 : *.o |> gcc %f -o %o |> program
+
+# Multiline support
+: inputs <group> \
+  |> command %f %<group> $(var) \
+  |> outputs | {bin}
+!macro = |> commands \
+  |> outputs
+run start of run \
+  more run *.c
